@@ -7,7 +7,7 @@ require "board"
 -- set makeprg=love\ .
 -- autocmd BufWritePost *.lua Make!
 
-local showVars = false
+local showVars = true
 local showStyle = false
 local clearColor = {56, 16, 16}
 local tilesets = {}
@@ -19,8 +19,6 @@ local rightmouseheld = false
 local zoomlevel = 1.0 -- image pixels per screen pixel
 local pixel_offset_x = 0
 local pixel_offset_y = 0
-local spacefocus_x = 12
-local spacefocus_y = 12
 local tileres = 64
 local resolution = {}
 local states = {
@@ -56,6 +54,7 @@ end
 function love.draw()
     local status
 
+    local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
     -- Menu
     if imgui.BeginMainMenuBar() then
         if imgui.BeginMenu("File") then
@@ -108,8 +107,9 @@ function love.draw()
         "\n rightmouseheld = "..tostring(rightmouseheld)..
         "\n zoomlevel = "..zoomlevel..
         "\n pixel_offset_x, pixel_offset_y = "..pixel_offset_x..", ".. pixel_offset_y..
-        "\n spacefocus_x, spacefocus_y = "..spacefocus_x..", "..spacefocus_y..
-        "\n tileres = "..tileres
+        "\n tileres = "..tileres..
+        -- [win_w/2 - off_x , win_h/2 - off_y] / (zoomold * tileres)
+        "\n center tile: "..(win_w/2 - pixel_offset_x)/(zoomlevel * tileres)..", "..(win_h/2 - pixel_offset_y)/(zoomlevel * tileres)
         )
         imgui.End()
     end
@@ -123,21 +123,22 @@ function love.draw()
     love.graphics.clear(clearColor[1], clearColor[2], clearColor[3], 255)
 
     -- draw board
-    -- love.graphics.draw( drawable, x, y, r, sx, sy, ox, oy, kx, ky )
-    local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
 
     for board_y in range(#board) do
         for board_x in range(#board[board_y]) do
+            -- love.graphics.draw( drawable, x, y, r, sx, sy, ox, oy, kx, ky )
             love.graphics.draw(
-                currenttileset[board[board_y][board_x]],             -- drawable
-                (board_x - 1) * tileres * zoomlevel + pixel_offset_x,-- x
-                (board_y - 1) * tileres * zoomlevel + pixel_offset_y,-- y
-                0,                                                   -- rotation
-                zoomlevel,                                           -- x scale
-                zoomlevel,                                           -- y scale
-                0,                                                   -- origin offset
-                0                                                    -- origin offset
-                )
+            currenttileset[board[board_y][board_x]],
+            (board_x - 1) * tileres * zoomlevel + pixel_offset_x,
+            (board_y - 1) * tileres * zoomlevel + pixel_offset_y,
+            0,
+            zoomlevel, zoomlevel
+            )
+            love.graphics.circle("fill",
+            (board_x - 0.5) * tileres * zoomlevel + pixel_offset_x,
+            (board_y - 0.5) * tileres * zoomlevel + pixel_offset_y,
+            1,
+            10)
         end
     end
 
@@ -209,10 +210,23 @@ function love.wheelmoved(x, y)
     imgui.WheelMoved(y)
     if not imgui.GetWantCaptureMouse() then
         -- Pass event to the game
+        local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
+        -- centered tile: [win_w/2 - off_x , win_h/2 - off_y] / (zoomold * tileres)
+        local tilecenter_x = (win_w/2 - pixel_offset_x)/(zoomlevel * tileres)
+        local tilecenter_y = (win_h/2 - pixel_offset_y)/(zoomlevel * tileres)
         if y > 0 then
             zoomlevel = zoomlevel * 0.9
+            if zoomlevel < 0.1 then
+                zoomlevel = 0.1
+            end
         elseif y < 0 then
             zoomlevel = zoomlevel * 1.1
+            if zoomlevel > 20 then
+                zoomlevel = 20
+            end
         end
+        -- work it backwards for off_x and off_y
+        pixel_offset_x = win_w/2 - tilecenter_x * zoomlevel * tileres
+        pixel_offset_y = win_h/2 - tilecenter_y * zoomlevel * tileres
     end
 end
