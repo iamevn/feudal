@@ -1,4 +1,6 @@
 require "imgui"
+require "love"
+require "tileloader"
 -- set makeprg=love\ .
 -- autocmd BufWritePost *.lua Make!
 
@@ -9,12 +11,14 @@ local spaceColor = {51, 78, 48}
 local mountColor = {126, 120, 99}
 local p1Color = {173, 125, 55}
 local p2Color = {46, 85, 124}
+local tilesets = {}
 
 --
 -- LOVE callbacks
 --
 
 function love.load(arg)
+    tilesets = loadTiles()
 end
 
 function love.update(dt)
@@ -27,12 +31,27 @@ function love.draw()
     -- Menu
     if imgui.BeginMainMenuBar() then
         if imgui.BeginMenu("File") then
+            if imgui.MenuItem("Quit") then
+                love.event.quit()
+            end
+            imgui.EndMenu()
+        end
+        if imgui.BeginMenu("Help") then
+            -- show help
+            imgui.MenuItem("todo")
+            imgui.EndMenu()
+        end
+        if imgui.BeginMenu("Tileset") then
+            for tilesetname, tilesettiles in pairs(tilesets) do
+                imgui.MenuItem(tilesetname) 
+            end
+            imgui.EndMenu()
+        end
+        if imgui.BeginMenu("Debug") then
             if imgui.MenuItem("Test") then
                 testbool = not testbool
             elseif imgui.MenuItem("Style") then
                 showStyle = not showStyle
-            elseif imgui.MenuItem("Quit") then
-                love.event.quit()
             end
             imgui.EndMenu()
         end
