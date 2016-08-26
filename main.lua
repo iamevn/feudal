@@ -7,7 +7,7 @@ require "board"
 -- set makeprg=love\ .
 -- autocmd BufWritePost *.lua Make!
 
-local testbool = false
+local showVars = false
 local showStyle = false
 local clearColor = {56, 16, 16}
 local tilesets = {}
@@ -21,6 +21,7 @@ local pixel_offset_x = 0
 local pixel_offset_y = 0
 local spacefocus_x = 12
 local spacefocus_y = 12
+local tileres = 64
 local resolution = {}
 local states = {
     "init",
@@ -88,8 +89,8 @@ function love.draw()
             imgui.EndMenu()
         end
         if imgui.BeginMenu("Debug") then
-            if imgui.MenuItem("Test") then
-                testbool = not testbool
+            if imgui.MenuItem("Variables") then
+                showVars = not showVars
             elseif imgui.MenuItem("Style") then
                 showStyle = not showStyle
             end
@@ -99,15 +100,24 @@ function love.draw()
     end
 
     -- Debug window
-    if testbool then
+    if showVars then
+        imgui.Begin("Debug", false, {"AlwaysAutoResize"})
         imgui.Text("Variables:"..
-        "\n zoomlevel = "..zoomlevel..
         "\n currentstate = "..currentstate..
-        "\n currenttileset = "..currenttilesetname)
+        "\n currenttileset = "..currenttilesetname..
+        "\n rightmouseheld = "..tostring(rightmouseheld)..
+        "\n zoomlevel = "..zoomlevel..
+        "\n pixel_offset_x, pixel_offset_y = "..pixel_offset_x..", ".. pixel_offset_y..
+        "\n spacefocus_x, spacefocus_y = "..spacefocus_x..", "..spacefocus_y..
+        "\n tileres = "..tileres
+        )
+        imgui.End()
     end
 
     if showStyle then
+        imgui.Begin("Style Editor", false, {"AlwaysAutoResize"})
         imgui.ShowStyleEditor()
+        imgui.End()
     end
 
     love.graphics.clear(clearColor[1], clearColor[2], clearColor[3], 255)
@@ -115,7 +125,6 @@ function love.draw()
     -- draw board
     -- love.graphics.draw( drawable, x, y, r, sx, sy, ox, oy, kx, ky )
     local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
-    local tileres = 64
 
     for board_y in range(#board) do
         for board_x in range(#board[board_y]) do
