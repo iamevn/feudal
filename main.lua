@@ -10,9 +10,13 @@ require "board"
 local showVars = true
 local showStyle = false
 local clearColor = {56, 16, 16}
+local guiimages = {}
 local tilesets = {}
+local tokensets = {}
 local currenttilesetname
 local currenttileset
+local currenttokensetname
+local currenttokenset
 local board
 local splitboard
 local rightmouseheld = false
@@ -39,9 +43,13 @@ local currentstate = states[1]
 --
 
 function love.load(arg)
+    guiimages = loadGui()
     tilesets = loadTiles()
+    tokensets = loadTokens()
     currenttilesetname = "rpg"
     currenttileset = tilesets.rpg
+    currenttokensetname = "simple"
+    currenttokenset = tokensets.simple
     --this isn't where this is going to end up but until I decide how I'm handling states...
     splitboard = createBoard()
     board = combineSegments(splitboard)
@@ -55,6 +63,11 @@ function love.draw()
     local status
 
     local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
+    -- draw tile frame where mouse is
+    local m_x, m_y = love.mouse.getPosition()
+    --determine which tile mouse is on
+    local mouseoverx, mouseovery = pixelToGrid(m_x, m_y, true)
+
     -- Menu
     if imgui.BeginMainMenuBar() then
         if imgui.BeginMenu("File") then
@@ -87,6 +100,15 @@ function love.draw()
             end
             imgui.EndMenu()
         end
+        if imgui.BeginMenu("Tokenset") then
+            for tokensetname, tokensetsprites in pairs(tokensets) do
+                if imgui.MenuItem(tokensetname) then
+                    currenttokensetname = tokensetname
+                    currenttokenset = tokensetsprites
+                end
+            end
+            imgui.EndMenu()
+        end
         if imgui.BeginMenu("Debug") then
             if imgui.MenuItem("Variables") then
                 showVars = not showVars
@@ -104,12 +126,13 @@ function love.draw()
         imgui.Text("Variables:"..
         "\n currentstate = "..currentstate..
         "\n currenttileset = "..currenttilesetname..
+        "\n currenttokenset = "..currenttokensetname..
         "\n rightmouseheld = "..tostring(rightmouseheld)..
         "\n zoomlevel = "..zoomlevel..
         "\n pixel_offset_x, pixel_offset_y = "..pixel_offset_x..", ".. pixel_offset_y..
         "\n tileres = "..tileres..
-        -- [win_w/2 - off_x , win_h/2 - off_y] / (zoomold * tileres)
-        "\n center tile: "..(win_w/2 - pixel_offset_x)/(zoomlevel * tileres)..", "..(win_h/2 - pixel_offset_y)/(zoomlevel * tileres)
+        "\n center tile: "..(win_w/2 - pixel_offset_x)/(zoomlevel * tileres)..", "..(win_h/2 - pixel_offset_y)/(zoomlevel * tileres)..
+        "\n mouseover tile: "..mouseoverx..", "..mouseovery
         )
         imgui.End()
     end
@@ -137,6 +160,14 @@ function love.draw()
         end
     end
 
+
+    love.graphics.draw(
+        guiimages.frame,
+        mouseoverx * tileres * zoomlevel + pixel_offset_x,
+        mouseovery * tileres * zoomlevel + pixel_offset_y,
+        0,
+        zoomlevel, zoomlevel
+    )
 
     imgui.Render()
 end
@@ -207,8 +238,7 @@ function love.wheelmoved(x, y)
         -- Pass event to the game
         local win_w, win_h = love.graphics.getWidth(), love.graphics.getHeight()
         -- centered tile: [win_w/2 - off_x , win_h/2 - off_y] / (zoomold * tileres)
-        local tilecenter_x = (win_w/2 - pixel_offset_x)/(zoomlevel * tileres)
-        local tilecenter_y = (win_h/2 - pixel_offset_y)/(zoomlevel * tileres)
+        local tilecenter_x, tilecenter_y = pixelToGrid(win_w/2, win_h/2, false)
         if y > 0 then
             zoomlevel = zoomlevel * 0.9
             if zoomlevel < 0.1 then
@@ -224,4 +254,14 @@ function love.wheelmoved(x, y)
         pixel_offset_x = win_w/2 - tilecenter_x * zoomlevel * tileres
         pixel_offset_y = win_h/2 - tilecenter_y * zoomlevel * tileres
     end
+end
+
+function pixelToGrid(px_x, px_y, floorit)
+    local grid_x = (px_x - pixel_offset_x)/(zoomlevel * tileres)
+    local grid_y = (px_y - pixel_offset_y)/(zoomlevel * tileres)
+    if floorit then
+        grid_x = math.floor(grid_x)
+        grid_y = math.floor(grid_y)
+    end
+    return grid_x, grid_y
 end
