@@ -128,17 +128,12 @@ function love.draw()
         for board_x in range(#board[board_y]) do
             -- love.graphics.draw( drawable, x, y, r, sx, sy, ox, oy, kx, ky )
             love.graphics.draw(
-            currenttileset[board[board_y][board_x]],
-            (board_x - 1) * tileres * zoomlevel + pixel_offset_x,
-            (board_y - 1) * tileres * zoomlevel + pixel_offset_y,
-            0,
-            zoomlevel, zoomlevel
+                currenttileset[board[board_y][board_x]],
+                (board_x - 1) * tileres * zoomlevel + pixel_offset_x,
+                (board_y - 1) * tileres * zoomlevel + pixel_offset_y,
+                0,
+                zoomlevel, zoomlevel
             )
-            love.graphics.circle("fill",
-            (board_x - 0.5) * tileres * zoomlevel + pixel_offset_x,
-            (board_y - 0.5) * tileres * zoomlevel + pixel_offset_y,
-            1,
-            10)
         end
     end
 
