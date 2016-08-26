@@ -8,6 +8,7 @@ local baseboards = {
     {{"plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "plain", "mountain", "plain", "plain", "plain", "rough", "mountain", "plain", "plain", "mountain", "plain"}, {"plain", "plain", "mountain", "plain", "plain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "plain", "plain", "plain", "mountain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "plain", "plain", "mountain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "plain", "plain", "mountain", "plain", "plain", "plain", "plain", "mountain", "plain", "plain", "plain"}, {"plain", "plain", "plain", "plain", "mountain", "rough", "plain", "plain", "rough", "plain", "plain", "plain"}, {"plain", "mountain", "plain", "plain", "plain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "rough"}, {"plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"}, {"plain", "mountain", "mountain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain", "plain"}}
  }
 
+ -- TODO: add support for randomly generated boards
  function createBoard()
      return baseboards
  end
@@ -40,4 +41,24 @@ local baseboards = {
              tmpsegment[row][col] = board[y][x]
          end
      end
+ end
+
+ function combineSegments(splitboard)
+     --fuck it assuming they're square
+     boardres = #splitboard[1]
+     local tmpboard = splitboard[1]
+     for y in range(boardres) do
+         tmpboard[y + boardres] = splitboard[3][y]
+     end
+     for y in range(boardres) do
+         for x in range(boardres) do
+             table.insert(tmpboard[y], boardres + x, splitboard[2][y][x])
+         end
+     end
+     for y in range(boardres) do
+         for x in range(boardres) do
+             table.insert(tmpboard[y + boardres], boardres + x, splitboard[4][y][x])
+         end
+     end
+     return tmpboard
  end
