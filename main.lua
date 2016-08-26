@@ -1,17 +1,27 @@
 require "imgui"
 require "love"
 require "tileloader"
+require "board"
+-- dumb reminder for editor
 -- set makeprg=love\ .
 -- autocmd BufWritePost *.lua Make!
 
 local testbool = false
 local showStyle = false
 local clearColor = {56, 16, 16}
-local spaceColor = {51, 78, 48}
-local mountColor = {126, 120, 99}
-local p1Color = {173, 125, 55}
-local p2Color = {46, 85, 124}
 local tilesets = {}
+local states = {
+    "init",
+    "connect (server)",
+    "connect (client)",
+    "determine first player",
+    "choose board layout",
+    "place pieces",
+    "your turn",
+    "opponent turn",
+    "game end"
+} --not sure where this is going, we'll see how I feel about it tomorrow
+local currentstate = states[1]
 
 --
 -- LOVE callbacks
