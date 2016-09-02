@@ -53,7 +53,6 @@ local baseboards = {
  -- given a board and a board segment index
  -- return a new board with that segment rotated 90 degrees clockwise
  function rotateSegment(board, n)
-     print("Rotating segment "..n.."\n")
      local tmpsegment = {}
      for y in range(12) do
          tmpsegment[y] = {}
