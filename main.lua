@@ -67,6 +67,7 @@ function love.draw()
     local m_x, m_y = love.mouse.getPosition()
     --determine which tile mouse is on
     local mouseoverx, mouseovery = pixelToGrid(m_x, m_y, true)
+    local quadx, quady = pixelToQuadXY(m_x, m_y)
 
     -- Menu
     if imgui.BeginMainMenuBar() then
@@ -161,6 +162,7 @@ function love.draw()
     end
 
 
+    -- mouse tile selection frame
     love.graphics.draw(
         guiimages.frame,
         mouseoverx * tileres * zoomlevel + pixel_offset_x,
@@ -168,6 +170,15 @@ function love.draw()
         0,
         zoomlevel, zoomlevel
     )
+
+    -- mouse quadrant selection frame
+    -- love.graphics.draw(
+    --     guiimages.frame,
+    --     quadx * 12 * tileres * zoomlevel + pixel_offset_x,
+    --     quady * 12 * tileres * zoomlevel + pixel_offset_y,
+    --     0,
+    --     zoomlevel * 12, zoomlevel * 12
+    -- )
 
     imgui.Render()
 end
@@ -228,9 +239,36 @@ function love.mousereleased(x, y, button)
         -- Pass event to the game
         if button == 2 then
             rightmouseheld = false
+        elseif button == 1 then
+            clickOnQuad(pixelToQuadXY(x, y))
         end
     end
 end
+
+--
+-- oh god this is terrible
+--
+local lastQuadClicked = nil
+function clickOnQuad(quadx, quady)
+    if (quadx == 0 or quadx == 1) and (quady == 0 or quady == 1) then
+        local quadnum = quadx == 0 and (quady == 0 and 1 or 3) or (quady == 0 and 2 or 4)
+        -- print("quad "..quadx..", "..quady.." ("..quadnum..") clicked\n")
+        if lastQuadClicked == nil then
+            lastQuadClicked = quadnum
+        elseif lastQuadClicked == quadnum then
+            splitboard = rotateSegment(splitboard, quadnum)
+            board = combineSegments(splitboard)
+            lastQuadClicked = nil
+        else
+            splitboard = swapSegments(splitboard, lastQuadClicked, quadnum)
+            board = combineSegments(splitboard)
+            lastQuadClicked = nil
+        end
+    end
+end
+--
+-- i'm sorry
+--
 
 function love.wheelmoved(x, y)
     imgui.WheelMoved(y)
@@ -241,13 +279,13 @@ function love.wheelmoved(x, y)
         local tilecenter_x, tilecenter_y = pixelToGrid(win_w/2, win_h/2, false)
         if y > 0 then
             zoomlevel = zoomlevel * 0.9
-            if zoomlevel < 0.1 then
-                zoomlevel = 0.1
+            if zoomlevel < 0.25 then
+                zoomlevel = 0.25
             end
         elseif y < 0 then
             zoomlevel = zoomlevel * 1.1
-            if zoomlevel > 20 then
-                zoomlevel = 20
+            if zoomlevel > 5 then
+                zoomlevel = 5
             end
         end
         -- work it backwards for off_x and off_y
@@ -255,6 +293,10 @@ function love.wheelmoved(x, y)
         pixel_offset_y = win_h/2 - tilecenter_y * zoomlevel * tileres
     end
 end
+
+--
+-- Utility stuff
+--
 
 function pixelToGrid(px_x, px_y, floorit)
     local grid_x = (px_x - pixel_offset_x)/(zoomlevel * tileres)
@@ -264,4 +306,9 @@ function pixelToGrid(px_x, px_y, floorit)
         grid_y = math.floor(grid_y)
     end
     return grid_x, grid_y
+end
+
+function pixelToQuadXY(px_x, px_y)
+    local grid_x, grid_y = pixelToGrid(px_x, px_y, true)
+    return math.floor(grid_x / 12), math.floor(grid_y / 12)
 end

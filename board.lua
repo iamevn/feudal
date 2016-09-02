@@ -10,6 +10,17 @@ local baseboards = {
 
  -- TODO: add support for randomly generated boards
  function createBoard()
+     local tmp = {}
+
+     for bd in range(4) do
+         tmp[bd] = {}
+         for y in range(12) do
+             tmp[bd][y] = {}
+             for x in range(12) do
+                 tmp[bd][y][x] = baseboards[bd][y][x]
+             end
+         end
+     end
      return baseboards
  end
 
@@ -24,39 +35,67 @@ local baseboards = {
      tmpboards[4] = board[4]
      tmpboards[a] = board[b]
      tmpboards[b] = board[a]
-     return tmpboards
+     -- return tmpboards
+     local tmp2 = {}
+     for bd in range(4) do
+         tmp2[bd] = {}
+         for y in range(12) do
+             tmp2[bd][y] = {}
+             for x in range(12) do
+                 tmp2[bd][y][x] = tmpboards[bd][y][x]
+             end
+         end
+     end
+
+     return tmp2
  end
 
  -- given a board and a board segment index
  -- return a new board with that segment rotated 90 degrees clockwise
  function rotateSegment(board, n)
+     print("Rotating segment "..n.."\n")
      local tmpsegment = {}
-     for y in range(#board[n]) do
+     for y in range(12) do
          tmpsegment[y] = {}
      end
-     for y in range(#board[n]) do
-         local col = #board[n][y] - y + 1
-         for x in range(#board[n][y]) do
+     for y in range(12) do
+         local col = 12 - y + 1
+         for x in range(12) do
              local row = x
-             tmpsegment[row][col] = board[y][x]
+             tmpsegment[row][col] = board[n][y][x]
          end
      end
+
+     local tmp = {}
+
+     for bd in range(4) do
+         tmp[bd] = {}
+         for y in range(12) do
+             tmp[bd][y] = {}
+             for x in range(12) do
+                 tmp[bd][y][x] = board[bd][y][x]
+             end
+         end
+     end
+
+     tmp[n] = tmpsegment
+     return tmp
  end
 
  function combineSegments(splitboard)
-     --fuck it assuming they're square
-     boardres = #splitboard[1]
-     local tmpboard = splitboard[1]
+     local boardres = 12
+     local tmpboard = {}
      for y in range(boardres) do
-         tmpboard[y + boardres] = splitboard[3][y]
-     end
-     for y in range(boardres) do
+         tmpboard[y] = {}
          for x in range(boardres) do
-             table.insert(tmpboard[y], boardres + x, splitboard[2][y][x])
+             table.insert(tmpboard[y], splitboard[1][y][x])
          end
      end
+
      for y in range(boardres) do
+         tmpboard[y + boardres] = splitboard[3][y]
          for x in range(boardres) do
+             table.insert(tmpboard[y], boardres + x, splitboard[2][y][x])
              table.insert(tmpboard[y + boardres], boardres + x, splitboard[4][y][x])
          end
      end
